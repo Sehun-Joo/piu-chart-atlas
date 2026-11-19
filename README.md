@@ -56,3 +56,5 @@ Unofficial fan tool. Leaderboard data comes from https://piugame.com/leaderboard
 ## Hosting status
 
 The repository is private. GitHub rejected Pages setup because the current plan does not support Pages for this repository. A local preview works; no public deployment has been made.
+
+The scraper uses the operating system certificate store via `truststore` and checks HTTPS before prompting for credentials. Python 3.10+ is required.

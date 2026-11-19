@@ -3,6 +3,10 @@ import argparse, getpass, json, os, re, time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+if __name__ == "__main__":
+    import truststore
+    truststore.inject_into_ssl()
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -52,6 +56,8 @@ def main():
     args = p.parse_args()
     session = requests.Session()
     session.headers['User-Agent'] = 'PIUChartAtlas/1.0 (personal leaderboard statistics)'
+    # Validate HTTPS before asking the user for credentials.
+    session.get(BASE, timeout=30).raise_for_status()
     if args.stdin_auth:
         import sys
         auth = json.loads(sys.stdin.readline())
@@ -64,7 +70,6 @@ def main():
             if sep:
                 session.cookies.set(name, value, domain='piugame.com', path='/')
     else:
-        session.get(BASE, timeout=30).raise_for_status()
         r = session.post(BASE + '/bbs/login_check.php', data={'mb_id': auth['email'], 'mb_password': auth['password'], 'url': '/leaderboard/over_ranking.php'}, timeout=30)
         r.raise_for_status()
     auth.clear()
@@ -121,4 +126,7 @@ def main():
     print(f'Saved {len(charts)} charts')
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except requests.exceptions.SSLError:
+        raise SystemExit('HTTPS certificate validation failed. Check your system certificates and update dependencies with: .venv/bin/pip install --upgrade -r requirements.txt') from None
