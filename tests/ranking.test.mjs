@@ -1,6 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {rankCharts} from '../docs/ranking.mjs';
 const charts=[{title:'A',level:20,mode:'S',scores:[800000,1000000,900000],pgCount:1},{title:'B',level:21,mode:'D',scores:[990000],pgCount:0},{title:'C',level:19,mode:'S',scores:[1000000],pgCount:1},{title:'Empty',level:20,mode:'S',scores:[],pgCount:0}];
-test('top X takes highest scores and handles partial samples',()=>{const rows=rankCharts(charts,{x:2});assert.equal(rows[0].title,'B');assert.equal(rows[1].average,950000);assert.equal(rows[0].used,1);assert.equal(rows.at(-1).average,null);});
-test('PG sorting independent of X, always excludes sub-20 charts',()=>{assert.deepEqual(rankCharts(charts,{metric:'pgCount',x:300}).map(c=>c.title),['A','B','Empty']);});
-test('filtering and equal-size comparisons',()=>{assert.deepEqual(rankCharts(charts,{x:2,requireFull:true}).map(c=>c.title),['A']);assert.equal(rankCharts(charts,{mode:'D',level:21,search:'b'})[0].title,'B');});
-test('empty charts sort last in both directions; X clamps',()=>{assert.equal(rankCharts(charts,{direction:'asc'}).at(-1).title,'Empty');assert.equal(rankCharts(charts,{x:0})[0].average,1000000);assert.equal(rankCharts(charts,{x:Infinity})[0].used,1);});
+test('top X excludes undersized charts and averages the highest X',()=>{const rows=rankCharts(charts,{x:2});assert.deepEqual(rows.map(c=>c.title),['A']);assert.equal(rows[0].average,950000);assert.equal(rows[0].used,2);});
+test('exactly X scores qualifies; fewer than X does not',()=>{assert.deepEqual(rankCharts(charts,{x:3}).map(c=>c.title),['A']);assert.deepEqual(rankCharts(charts,{x:4}),[]);assert.deepEqual(rankCharts(charts,{x:2,requireFull:false}).map(c=>c.title),['A']);});
+test('PG sorting includes undersized charts independently of X',()=>{assert.deepEqual(rankCharts(charts,{metric:'pgCount',x:300}).map(c=>c.title),['A','B','Empty']);});
+test('filters still apply and X clamps to supported range',()=>{assert.equal(rankCharts(charts,{x:1,mode:'D',level:21,search:'b'})[0].title,'B');assert.equal(rankCharts(charts,{x:0})[0].average,1000000);assert.deepEqual(rankCharts(charts,{x:Infinity}),[]);});

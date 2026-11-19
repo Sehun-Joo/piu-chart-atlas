@@ -5,7 +5,7 @@ A small static site for PIU Single and Double charts at level **20 and above**.
 - Sort by the average of the highest **X** scores (X = 1–300).
 - Sort by **Perfect Game count**, independent of X.
 - Filter by chart level and mode; search by title; reverse the order.
-- Share filters in the URL. Require X scores for equal-size samples.
+- Share filters in the URL. Top-X averages automatically exclude charts with fewer than X scores.
 - Keep credentials off the website and out of Git.
 
 ## Current data status
@@ -37,7 +37,7 @@ git push
 
 ## Metrics and limits
 
-PIU displays **TOP 300** per chart. X cannot exceed 300. If a chart has fewer than X entries, average the available entries and display the sample size. “Require X scores” excludes those charts from average sorting.
+PIU displays **TOP 300** per chart. X cannot exceed 300. Charts with fewer than X leaderboard entries are automatically excluded from average sorting. PG-count sorting includes them.
 
 A PG is a score of **1,000,000**. This counts leaderboard entries, not repeat PG plays by the same person. When all 300 entries are PGs, show **300+**: the source cannot establish the actual total. No missing score is treated as zero.
 
