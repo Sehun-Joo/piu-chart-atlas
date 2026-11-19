@@ -52,3 +52,7 @@ npm run build
 No JavaScript dependencies or server backend are required. `docs/` is ready for GitHub Pages. `npm run build` copies it into `dist/` for static hosting. A manual GitHub Actions workflow refreshes the snapshot with repository secrets; scheduled scraping is intentionally not enabled.
 
 Unofficial fan tool. Leaderboard data comes from https://piugame.com/leaderboard/over_ranking.php. This project is not affiliated with Andamiro.
+
+## Hosting status
+
+The repository is private. GitHub rejected Pages setup because the current plan does not support Pages for this repository. A local preview works; no public deployment has been made.
