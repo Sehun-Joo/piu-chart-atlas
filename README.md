@@ -78,3 +78,9 @@ Only shared players contribute. Use the largest connected chart group, require a
 Player display name plus discriminator is matched using a random per-run HMAC key. Matched records remain in memory and are removed before publishing; only chart summaries are saved. Renamed players may not match. The legacy two-chart snapshot cannot produce estimates; rerun the full scraper.
 
 Synthetic tests verify that within-player adjustment can reverse misleading raw averages caused by stronger participants on harder charts. Real-data validation remains pending. Clear-only selection, top-300 truncation, practice, and chart specialization remain unresolved biases. Compare only within a level and mode. The method does not infer missing failed attempts.
+
+## Concurrent scraping
+
+The scraper now defaults to four chart workers. Use `.venv/bin/python scripts/scrape.py --workers 4` (1–8 supported). Listing pages are discovered sequentially, and chart details on each page are fetched concurrently in deterministic order. Each thread has its own HTTP session with a copy of the authenticated cookies, kept only in memory.
+
+`--delay 0.25` is the default minimum spacing between request starts across all workers, not per worker; the minimum is 0.2 seconds. HTTP 429/503 responses pause new requests across all workers using Retry-After when supplied. Transient errors retry up to three attempts. Any failed chart aborts the export and retains the previous data snapshot. `--workers 1` restores serial requests. Model fitting still runs once after all charts are collected. An already-running scrape keeps its old code; restart it to use this version.
