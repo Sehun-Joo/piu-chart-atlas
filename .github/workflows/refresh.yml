@@ -1,0 +1,28 @@
+name: Refresh PIU snapshot
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Scrape leaderboard
+        run: python scripts/scrape.py
+        env:
+          PIU_EMAIL: ${{ secrets.PIU_EMAIL }}
+          PIU_PASSWORD: ${{ secrets.PIU_PASSWORD }}
+          PIU_COOKIE: ${{ secrets.PIU_COOKIE }}
+      - name: Commit updated snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/data.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Refresh PIU leaderboard snapshot'
+          git push
