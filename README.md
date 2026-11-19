@@ -10,7 +10,7 @@ A small static site for PIU Single and Double charts at level **20 and above**.
 
 ## Current data status
 
-The committed snapshot is **partial: two real chart leaderboards**, not the full catalog. Browser sign-in and leaderboard structure were verified on PIU on November 19, 2026. The full authenticated command-line scrape could not be run in the build environment because credential input was blocked by automatic approval. Run the exporter below to replace the partial snapshot.
+The November 19, 2026 full export contains **1,388 eligible charts**: 554 Single and 834 Double, levels 20–28. The player-adjusted model fitted 1,370 charts; 18 lacked sufficient connected shared-player coverage. Numeric data and model fitting have been checked; predictive validity and the remaining sampling biases have not been independently validated.
 
 ## Run locally
 
@@ -55,7 +55,7 @@ Unofficial fan tool. Leaderboard data comes from https://piugame.com/leaderboard
 
 ## Hosting status
 
-The repository is private. GitHub rejected Pages setup because the current plan does not support Pages for this repository. A local preview works; no public deployment has been made.
+The repository is public. The static site is served from `docs/`.
 
 The scraper uses the operating system certificate store via `truststore` and checks HTTPS before prompting for credentials. Python 3.10+ is required.
 
@@ -75,7 +75,7 @@ The scraper now fits `log1p(1000000-score) = baseline + player effect + chart ef
 
 Only shared players contribute. Use the largest connected chart group, require at least 3 charts and 30 shared players, and withhold charts with fewer than 10 shared-player observations. Penalties 5, 20, and 50 provide a tuning-sensitivity range; 20 gives the central ranking. These are provisional choices, and the range is not a confidence interval. Nonconverged fits are withheld.
 
-Player display name plus discriminator is matched using a random per-run HMAC key. Matched records remain in memory and are removed before publishing; only chart summaries are saved. Renamed players may not match. The legacy two-chart snapshot cannot produce estimates; rerun the full scraper.
+Player display name plus discriminator is matched using a random per-run HMAC key. Matched records remain in memory and are removed before publishing; only chart summaries are saved. Renamed players may not match. The full snapshot includes 1,370 fitted chart estimates.
 
 Synthetic tests verify that within-player adjustment can reverse misleading raw averages caused by stronger participants on harder charts. Real-data validation remains pending. Clear-only selection, top-300 truncation, practice, and chart specialization remain unresolved biases. Compare only within a level and mode. The method does not infer missing failed attempts.
 
