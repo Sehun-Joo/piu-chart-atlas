@@ -1,5 +1,5 @@
 """Read-only PIU leaderboard export. Credentials stay in memory."""
-import argparse, getpass, json, os, re, time
+import argparse, getpass, json, os, re, time, secrets, hmac, hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 
 BASE = 'https://piugame.com'
 LIST = BASE + '/leaderboard/over_ranking.php'
+RUN_KEY = secrets.token_bytes(32)
 
 def soup(html):
     return BeautifulSoup(html, 'html.parser')
@@ -34,6 +35,7 @@ def parse_chart(html, url):
     chart = chart_meta(root)
     rows = root.select('.rangking_list_w > ul.list > li')
     scores = []
+    observations = []
     for row in rows:
         score = row.select_one('.score .tt')
         if not score:
@@ -42,8 +44,14 @@ def parse_chart(html, url):
         if not 0 <= value <= 1000000:
             raise ValueError('Unexpected score range')
         scores.append(value)
+        # Display name + discriminator is a snapshot identity, not a permanent ID.
+        names = row.select('.name_w .profile_name')
+        if names:
+            identity = '|'.join(n.get_text(strip=True) for n in names)
+            key = hmac.new(RUN_KEY, identity.encode(), hashlib.sha256).hexdigest()
+            observations.append((key, value))
     # Only numeric scores are exported: no names, account details, or credentials.
-    chart.update(id=urlparse(url).query, url=url, scores=sorted(scores, reverse=True),
+    chart.update(_observations=observations, id=urlparse(url).query, url=url, scores=sorted(scores, reverse=True),
                  pgCount=sum(s == 1000000 for s in scores), pgCapped=len(scores) >= 300 and all(s == 1000000 for s in scores))
     return chart
 
@@ -117,7 +125,10 @@ def main():
             break
     if not charts:
         raise RuntimeError('No eligible charts found')
-    payload = {'updatedAt': datetime.now(timezone.utc).isoformat(), 'source': LIST, 'complete': not bool(args.limit), 'leaderboardLimit': 300, 'charts': charts}
+    from model import annotate
+    model = annotate(charts)
+    print(f"Model fitted for {model['fittedCharts']} charts with sufficient shared-player coverage", flush=True)
+    payload = {'model': model, 'updatedAt': datetime.now(timezone.utc).isoformat(), 'source': LIST, 'complete': not bool(args.limit), 'leaderboardLimit': 300, 'charts': charts}
     target = Path(args.output)
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix('.tmp')
