@@ -58,3 +58,13 @@ Unofficial fan tool. Leaderboard data comes from https://piugame.com/leaderboard
 The repository is private. GitHub rejected Pages setup because the current plan does not support Pages for this repository. A local preview works; no public deployment has been made.
 
 The scraper uses the operating system certificate store via `truststore` and checks HTTPS before prompting for credentials. Python 3.10+ is required.
+
+## Scoreability evidence (default)
+
+This is a descriptive heuristic for finding charts with broadly demonstrated high scores, not a probability, difficulty estimate, or statistical correction for selection bias.
+
+For target T (default 990,000), sort scores descending and take at most 100. Each contributes `clamp((score - (T - 20000)) / 20000, 0, 1)`. Sum the contributions for a 0–100 evidence index. Five PGs alone produce 5; eighty scores at target produce at least 80. Missing entries contribute no evidence, not inferred failures. Target is configurable from 900,000 through 1,000,000. Original top-X average and PG sorts remain available.
+
+The fixed 100-entry depth avoids different denominators and operates below the source’s top-300 cap. It does not remove popularity or chart-age effects. The depth and ramp width are transparent, uncalibrated design choices. Clear-only, best-score leaderboards do not provide attempts, failures, exposure, or matched player skills; therefore true scoring difficulty is not identifiable from this snapshot. Compare charts within level and mode. Sparse charts are uncertain rather than necessarily hard. No Wilson/binomial confidence interval is applied because these entries are not random trials.
+
+A stronger future model needs shared anonymous player identifiers for skill-adjusted chart comparisons, plus attempt/failure data to estimate unconditional success. The current exporter intentionally keeps only numeric scores.

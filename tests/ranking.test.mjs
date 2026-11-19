@@ -1,6 +1,11 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {rankCharts} from '../docs/ranking.mjs';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {rankCharts,scoreability} from '../docs/ranking.mjs';
 const charts=[{title:'A',level:20,mode:'S',scores:[800000,1000000,900000],pgCount:1},{title:'B',level:21,mode:'D',scores:[990000],pgCount:0},{title:'C',level:19,mode:'S',scores:[1000000],pgCount:1},{title:'Empty',level:20,mode:'S',scores:[],pgCount:0}];
-test('top X excludes undersized charts and averages the highest X',()=>{const rows=rankCharts(charts,{x:2});assert.deepEqual(rows.map(c=>c.title),['A']);assert.equal(rows[0].average,950000);assert.equal(rows[0].used,2);});
-test('exactly X scores qualifies; fewer than X does not',()=>{assert.deepEqual(rankCharts(charts,{x:3}).map(c=>c.title),['A']);assert.deepEqual(rankCharts(charts,{x:4}),[]);assert.deepEqual(rankCharts(charts,{x:2,requireFull:false}).map(c=>c.title),['A']);});
-test('PG sorting includes undersized charts independently of X',()=>{assert.deepEqual(rankCharts(charts,{metric:'pgCount',x:300}).map(c=>c.title),['A','B','Empty']);});
-test('filters still apply and X clamps to supported range',()=>{assert.equal(rankCharts(charts,{x:1,mode:'D',level:21,search:'b'})[0].title,'B');assert.equal(rankCharts(charts,{x:0})[0].average,1000000);assert.deepEqual(rankCharts(charts,{x:Infinity}),[]);});
+test('top X excludes undersized charts and averages the highest X',()=>{const rows=rankCharts(charts,{metric:'average',x:2});assert.deepEqual(rows.map(c=>c.title),['A']);assert.equal(rows[0].average,950000);assert.equal(rows[0].used,2);});
+test('exactly X scores qualifies; fewer than X does not',()=>{assert.deepEqual(rankCharts(charts,{metric:'average',x:3}).map(c=>c.title),['A']);assert.deepEqual(rankCharts(charts,{metric:'average',x:4}),[]);assert.deepEqual(rankCharts(charts,{metric:'average',x:2,requireFull:false}).map(c=>c.title),['A']);});
+test('PG sorting includes undersized charts independently of X',()=>{assert.deepEqual(rankCharts(charts,{metric:'average',metric:'pgCount',x:300}).map(c=>c.title),['A','B','Empty']);});
+test('filters still apply and X clamps to supported range',()=>{assert.equal(rankCharts(charts,{metric:'average',x:1,mode:'D',level:21,search:'b'})[0].title,'B');assert.equal(rankCharts(charts,{metric:'average',x:0})[0].average,1000000);assert.deepEqual(rankCharts(charts,{metric:'average',x:Infinity}),[]);});
+
+ test('a few elite clears cannot beat broad target attainment',()=>{assert.equal(scoreability(Array(5).fill(1000000)).ease,5);assert.equal(scoreability(Array(80).fill(990000)).ease,80);});
+ test('evidence is bounded and unaffected by scores beyond fixed depth',()=>{assert.equal(scoreability(Array(300).fill(1000000)).ease,100);assert.equal(scoreability([]).ease,0);assert.equal(scoreability([970000,980000,990000]).ease,1.5);});
+ test('raising target cannot increase evidence; increasing scores cannot reduce it',()=>{const a=[980000,985000,990000];assert.ok(scoreability(a,1000000).ease<=scoreability(a,990000).ease);assert.ok(scoreability(a.map(s=>s+1000)).ease>=scoreability(a).ease);});
+ test('new default includes sparse charts with low evidence',()=>{assert.equal(rankCharts(charts)[0].title,'A');assert.equal(rankCharts(charts).at(-1).ease,0);});
